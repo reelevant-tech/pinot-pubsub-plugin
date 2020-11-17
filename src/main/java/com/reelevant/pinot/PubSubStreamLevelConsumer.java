@@ -19,7 +19,7 @@ import java.util.Set;
 
 
 public class PubSubStreamLevelConsumer implements StreamLevelConsumer {
-	private final Logger LOGGER;
+	private static final Logger LOGGER = LoggerFactory.getLogger(PubSubStreamLevelConsumer.class);
 	private static final Integer MAXIMUM_NUM_OF_EVENTS_BEFORE_LOGGING = 10000;
 	private static final Integer MAXIMUM_MS_BEFORE_LOGGING = 60000;
 
@@ -33,6 +33,8 @@ public class PubSubStreamLevelConsumer implements StreamLevelConsumer {
 
 	private final StreamMessageDecoder messageDecoder;
 
+	private final PubSubStreamLevelStreamConfig pubSubStreamLevelStreamConfig;
+
 	// Component to pull events from Pub/Sub and ack them.
 	private List<String> ackIds = new ArrayList<>();
 	private ListIterator<ReceivedMessage> pubsubIterator;
@@ -40,11 +42,13 @@ public class PubSubStreamLevelConsumer implements StreamLevelConsumer {
 	private SubscriberStub subscriber;
 	private final String subscriptionName;
 
-	public PubSubStreamLevelConsumer(String projectId, String subscriptionId, StreamConfig streamConfig, Set<String> fieldsToRead) {
-		messageDecoder = StreamDecoderProvider.create(streamConfig, fieldsToRead);
-		subscriptionName = ProjectSubscriptionName.format(projectId, subscriptionId);
-
-		LOGGER = LoggerFactory.getLogger(PubSubStreamLevelConsumer.class.getName());
+	public PubSubStreamLevelConsumer(String clientId, String tableName, StreamConfig streamConfig, Set<String> sourceFields, String groupId) {
+		this.pubSubStreamLevelStreamConfig = new PubSubStreamLevelStreamConfig(streamConfig, tableName, groupId);
+		this.messageDecoder = StreamDecoderProvider.create(streamConfig, sourceFields);
+		this.subscriptionName = ProjectSubscriptionName.format(
+				this.pubSubStreamLevelStreamConfig.getProjectId(),
+				this.pubSubStreamLevelStreamConfig.getSubscriptionId()
+		);
 	}
 
 	@Override
@@ -57,38 +61,46 @@ public class PubSubStreamLevelConsumer implements StreamLevelConsumer {
 								.setMaxInboundMessageSize(20 * 1024 * 1024) // 20MB (maximum message size).
 								.build()
 				).build();
-		subscriber = GrpcSubscriberStub.create(subscriberSettings);
-		pullRequest = PullRequest.newBuilder()
+		this.subscriber = GrpcSubscriberStub.create(subscriberSettings);
+		this.pullRequest = PullRequest.newBuilder()
 				.setMaxMessages(MAX_NUM_EVENTS_PER_BATCH)
 				.setSubscription(subscriptionName)
 				.build();
 	}
 
 	private void updatePubsubIterator() {
-		PullResponse pullResponse = subscriber.pullCallable().call(pullRequest);
-		pubsubIterator = pullResponse.getReceivedMessagesList().listIterator();
+		PullResponse pullResponse = this.subscriber.pullCallable().call(this.pullRequest);
+		this.pubsubIterator = pullResponse.getReceivedMessagesList().listIterator();
 	}
 
 	@Override
 	public GenericRow next(GenericRow destination) {
-		if (pubsubIterator == null || !pubsubIterator.hasNext()) {
+		if (this.pubsubIterator == null || !this.pubsubIterator.hasNext()) {
 			updatePubsubIterator();
 		}
 
-		if (pubsubIterator.hasNext()) {
+		if (this.pubsubIterator.hasNext()) {
 			try {
 				final ReceivedMessage message = pubsubIterator.next();
 				destination = messageDecoder.decode(message, destination);
-				ackIds.add(message.getAckId());
+				this.ackIds.add(message.getAckId());
 				// Check if we need to log some information to the user
 				CURRENT_COUNT++;
 				final long now = System.currentTimeMillis();
 				if (now - LAST_LOG_TIME > MAXIMUM_MS_BEFORE_LOGGING || CURRENT_COUNT - PREVIOUS_COUNT >= MAXIMUM_NUM_OF_EVENTS_BEFORE_LOGGING) {
 					if (PREVIOUS_COUNT == 0) {
-						LOGGER.info("Consumed {} events from Pub/Sub subscription {}", CURRENT_COUNT, this.subscriptionName);
+						LOGGER.info("Consumed {} events from Pub/Sub topic {} subscription {}",
+							CURRENT_COUNT,
+							this.pubSubStreamLevelStreamConfig.getTopicName(),
+							this.pubSubStreamLevelStreamConfig.getSubscriptionId()
+						);
 					} else {
-						LOGGER.info("Consumed {} events from kafka stream {} (rate:{}/s)", CURRENT_COUNT - PREVIOUS_COUNT,
-								this.subscriptionName, (float) (CURRENT_COUNT - PREVIOUS_COUNT) * 1000 / (now - LAST_LOG_TIME));
+						LOGGER.info("Consumed {} events from Pub/Sub topic {} subscription {} (rate:{}/s)",
+							CURRENT_COUNT - PREVIOUS_COUNT,
+							this.pubSubStreamLevelStreamConfig.getTopicName(),
+							this.pubSubStreamLevelStreamConfig.getSubscriptionId(),
+							(float) (CURRENT_COUNT - PREVIOUS_COUNT) * 1000 / (now - LAST_LOG_TIME)
+						);
 					}
 					PREVIOUS_COUNT = CURRENT_COUNT;
 					LAST_LOG_TIME = now;
@@ -109,10 +121,10 @@ public class PubSubStreamLevelConsumer implements StreamLevelConsumer {
 		subscriber.acknowledgeCallable().call(
 				AcknowledgeRequest.newBuilder()
 						.setSubscription(subscriptionName)
-						.addAllAckIds(ackIds)
+						.addAllAckIds(this.ackIds)
 						.build()
 		);
-		ackIds.clear();
+		this.ackIds.clear();
 	}
 
 	@Override

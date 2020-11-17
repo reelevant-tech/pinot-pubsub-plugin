@@ -14,6 +14,13 @@ public class PubSubStreamLevelStreamConfig {
 	private final String topicName;
 	private final Map<String, String> pubSubConsumerProperties;
 
+	// Default PubSub properties (if any) should be defined here.
+	static {
+		defaultProps = new HashMap<>();
+		defaultProps.put("stream.pubsub.consumer.type", "HighLevel");
+		defaultProps.put("stream.pubsub.consumer.factory.class.name", "com.reelevant.pinot.PubSubConsumerFactory");
+	}
+
 	//public PubSubStreamLevelStreamConfig(StreamConfig streamConfig, String projectId, String subscriptionId, String topicName) {
 	public PubSubStreamLevelStreamConfig(StreamConfig streamConfig, String tableName, String groupId) {
 		Map<String, String> streamConfigMap = streamConfig.getStreamConfigsMap();
@@ -57,10 +64,4 @@ public class PubSubStreamLevelStreamConfig {
 		return this.topicName;
 	}
 
-	static {
-		// Default PubSub properties (if any) should be defined here.
-		defaultProps = new HashMap<>();
-		defaultProps.put("stream.pubsub.consumer.type", "HighLevel");
-		defaultProps.put("stream.pubsub.consumer.factory.class.name", "com.reelevant.pinot.PubSubConsumerFactory");
-	}
 }
