@@ -12,7 +12,6 @@ public class PubSubStreamConfigProperties {
 	}
 
 	public static class HighLevelConsumer {
-		public static final String PUBSUB_GCP_KEY_PATH = "pubsub.gcpKeyPath";
 		public static final String PUBSUB_PROJECT_ID = "pubsub.projectId";
 		public static final String PUBSUB_SUBSCRIPTION_ID = "pubsub.subscriptionId";
 		public static final String PUBSUB_TOPIC_NAME = "pubsub.topicName";

@@ -17,11 +17,11 @@ The rest of the configuration properties for your stream should be set with the 
 
 ## Configuration
 
-The following table lists the configurable parameters of datasource-importer and their default values.
+Here is a list of available configurations for this plugin.
+Remember, due to the lack of low level stream type, some configurations have to be set with default values (See below):
 
-| Parameter                      | Description                               |
-|:-------------------------------|:------------------------------------------|
-| `stream.pubsub.gcpKeyPath`     | Path to GCS service account key file      |
-| `stream.pubsub.projectId`      | GCP project ID of the Pub/Sub to be read  |
-| `stream.pubsub.subscriptionId` | Subscription ID of the Pub/Sub to be read |
-| `stream.pubsub.topicName`      | Topic name of the Pub/Sub to be read      |
+| Parameter                                   | Description                                    |
+|:--------------------------------------------|:-----------------------------------------------|
+| `stream.pubsub.projectId`                   | GCP project ID of the Pub/Sub to be read       |
+| `stream.pubsub.subscriptionId`              | Subscription ID of the Pub/Sub to be read      |
+| `stream.pubsub.topicName`                   | Topic name of the Pub/Sub to be read           |
