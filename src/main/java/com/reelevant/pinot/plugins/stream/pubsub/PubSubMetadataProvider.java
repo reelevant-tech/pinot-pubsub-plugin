@@ -1,4 +1,4 @@
-package com.reelevant.pinot;
+package com.reelevant.pinot.plugins.stream.pubsub;
 
 import org.apache.pinot.spi.stream.OffsetCriteria;
 import org.apache.pinot.spi.stream.StreamConfig;
@@ -10,15 +10,10 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nonnull;
 
 public class PubSubMetadataProvider implements StreamMetadataProvider {
-
-	public PubSubMetadataProvider(String clientId, StreamConfig streamConfig) {
-		// Should handle low level connection
-		// but are not supported for Google Pub/Sub.
-		// It is still required by Pinot.
-	}
+	public PubSubMetadataProvider(String clientId, StreamConfig streamConfig) {}
 
 	@Override
-	public int fetchPartitionCount(long l) {
+	public int fetchPartitionCount(long timeoutMillis) {
 		return 0;
 	}
 
@@ -34,7 +29,6 @@ public class PubSubMetadataProvider implements StreamMetadataProvider {
 
 	@Override
 	public void close() throws IOException {
-
+		throw new UnsupportedOperationException("Usage of this method is not supported with Pub/Sub");
 	}
-
 }
