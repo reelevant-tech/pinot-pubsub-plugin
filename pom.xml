@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.reelevant.pinot</groupId>
-	<artifactId>pinot-pubsub-plugin</artifactId>
+	<groupId>com.reelevant.pinot.plugins.stream.pubsub</groupId>
+	<artifactId>pubsub-stream-ingestion</artifactId>
 	<version>1.0-SNAPSHOT</version>
-	<name>Pinot Pub/Sub Plugin</name>
+	<name>pubsub-stream-ingestion</name>
 	<description>Apache Pinot stream ingestion plugin for Cloud Pub/Sub</description>
 	<url>https://github.com/reelevant-tech/pinot-pubsub-plugin</url>
 	<organization>
@@ -15,27 +15,73 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
-		<cloud-pubsub.version>1.108.6</cloud-pubsub.version>
-		<pinot-spi.version>0.5.0</pinot-spi.version>
+		<apache.httpclient.version>4.5.12</apache.httpclient.version>
+		<apache.pinot-spi.version>0.5.0</apache.pinot-spi.version>
+		<google.bom>16.1.0</google.bom>
+		<google.guava.version>30.0-jre</google.guava.version>
+		<google.pubsub.version>1.109.0</google.pubsub.version>
+		<junit.version>4.11</junit.version>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>com.google.cloud</groupId>
 			<artifactId>google-cloud-pubsub</artifactId>
-			<version>${cloud-pubsub.version}</version>
+			<version>${google.pubsub.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>${google.guava.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>${apache.httpclient.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.pinot</groupId>
 			<artifactId>pinot-spi</artifactId>
-			<version>${pinot-spi.version}</version>
+			<version>${apache.pinot-spi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-netty-shaded</artifactId>
+			<version>1.33.1</version>
+		</dependency>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-protobuf</artifactId>
+			<version>1.33.1</version>
+		</dependency>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-stub</artifactId>
+			<version>1.33.1</version>
+		</dependency>
+		<dependency> <!-- necessary for Java 9+ -->
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>annotations-api</artifactId>
+			<version>6.0.53</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>libraries-bom</artifactId>
+				<version>${google.bom}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<build>
 		<pluginManagement>
 			<plugins>
