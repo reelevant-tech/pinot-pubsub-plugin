@@ -30,6 +30,12 @@ public class PubSubStreamLevelConsumer implements StreamLevelConsumer {
 	private SubscriberStub pubsubSubscriber;
 	private final String pubsubSubscriptionName;
 
+	// Keeps information for logging
+	private long lastLogTime = 0;
+	private long lastCount = 0;
+	private long currentCount = 0L;
+
+
 	public PubSubStreamLevelConsumer(String clientId, String tableName, StreamConfig streamConfig, Set<String> sourceFields, String groupId) {
 		pubSubStreamLevelStreamConfig = new PubSubStreamLevelStreamConfig(streamConfig, tableName, groupId);
 		messageDecoder = StreamDecoderProvider.create(streamConfig, sourceFields);
@@ -53,8 +59,6 @@ public class PubSubStreamLevelConsumer implements StreamLevelConsumer {
 					.build()
 			).build();
 
-		LOGGER.info("SUBSCRIBER SETTINGS {}", subscriberStubSettings.toString());
-
 		// Try to connect to Pub/Sub
 		pubsubSubscriber = GrpcSubscriberStub.create(subscriberStubSettings);
 	}
@@ -72,18 +76,26 @@ public class PubSubStreamLevelConsumer implements StreamLevelConsumer {
 				// Decode Pub/Sub message to Pinot's GenericRow format.
 				destination = messageDecoder.decode(message.getMessage(), destination);
 
-				// Add message id to ack list and modify the ack deadline of each
-				// received message from the default 10 seconds to 30.
-				// This prevents the server from redelivering the message after the default 10 seconds have passed.
-				ackIds.add(message.getAckId());
-				pubsubSubscriber
-					.modifyAckDeadlineCallable()
-					.call(ModifyAckDeadlineRequest.newBuilder()
-						.setSubscription(pubsubSubscriptionName)
-						.addAckIds(message.getAckId())
-						.setAckDeadlineSeconds(30)
-						.build());
+				// Log every minutes or 100k events
+				currentCount = currentCount + 1;
+				final long now = System.currentTimeMillis();
+				if (now - lastLogTime > 60000 || currentCount - lastCount >= 100000) {
+					if (lastCount == 0) {
+						LOGGER.info("Consumed {} events from Pub/Sub {}", currentCount, pubsubSubscriptionName);
+					} else {
+						LOGGER.info(
+							"Consumed {} events from from Pub/Sub {} (rate:{}/s)",
+								currentCount - lastCount,
+								pubsubSubscriptionName,
+								(float) (currentCount - lastCount) * 1000 / (now - lastLogTime)
+						);
+					}
+					lastCount = currentCount;
+					lastLogTime = now;
+				}
 
+				// Add message ID to list of messages to be ACK
+				ackIds.add(message.getAckId());
 				return destination;
 			} catch (Exception exc) {
 				LOGGER.warn("Caught exception while consuming Pub/Sub message", exc);
