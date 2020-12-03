@@ -66,6 +66,19 @@ public class PubSubStreamLevelConsumer implements StreamLevelConsumer {
 	@Override
 	public GenericRow next(GenericRow destination) {
 		if (pubsubMessageIterator == null || !pubsubMessageIterator.hasNext()) {
+			if (!ackIds.isEmpty()) {
+				// Time to ack messages pulled from iterator
+				AcknowledgeRequest acknowledgeRequest = AcknowledgeRequest.newBuilder()
+						.setSubscription(pubsubSubscriptionName)
+						.addAllAckIds(ackIds)
+						.build();
+
+				// Use acknowledgeCallable().futureCall to asynchronously perform this operation.
+				pubsubSubscriber.acknowledgeCallable().call(acknowledgeRequest);
+				ackIds.clear();
+			}
+
+			// Pull new batch of messages
 			updatePubsubMessageIterator();
 		}
 
@@ -107,16 +120,7 @@ public class PubSubStreamLevelConsumer implements StreamLevelConsumer {
 	}
 
 	@Override
-	public void commit() {
-		AcknowledgeRequest acknowledgeRequest = AcknowledgeRequest.newBuilder()
-			.setSubscription(pubsubSubscriptionName)
-			.addAllAckIds(ackIds)
-			.build();
-
-		// Use acknowledgeCallable().futureCall to asynchronously perform this operation.
-		pubsubSubscriber.acknowledgeCallable().call(acknowledgeRequest);
-		ackIds.clear();
-	}
+	public void commit() {}
 
 	@Override
 	public void shutdown() throws Exception {
