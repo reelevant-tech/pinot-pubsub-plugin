@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.reelevant.pinot.plugins.stream.pubsub</groupId>
     <artifactId>pubsub-stream-ingestion</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>v1.0.0</version>
     <name>pubsub-stream-ingestion</name>
     <description>Apache Pinot stream ingestion plugin for Cloud Pub/Sub</description>
     <url>https://github.com/reelevant-tech/pinot-pubsub-plugin</url>
