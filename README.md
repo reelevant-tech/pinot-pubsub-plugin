@@ -2,7 +2,7 @@
 
 Apache Pinot [stream ingestion plugin](https://docs.pinot.apache.org/developers/plugin-architecture/write-custom-plugins/write-your-stream) for Cloud Pub/Sub.
 
-This plugin only implements the `High Level` type, meaning consumes data without control over the partition. Google Pub/Sub does not defined any concept of partitions like Kafka do.
+This plugin only implements the `LowLevel` consumer type even though PubSub doesn't have a concept of partition (which is how low level ingestion is supposed to work). We are forced to hack around this by providing arbitrary offset so we can ingest events as pinot expect.
 
 ## How to use it
 
