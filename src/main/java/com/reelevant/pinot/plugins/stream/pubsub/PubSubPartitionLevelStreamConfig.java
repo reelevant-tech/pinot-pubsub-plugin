@@ -8,18 +8,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-public class PubSubStreamLevelStreamConfig {
-	private static final Map<String, String> defaultProps;
-	private final Map<String, String> pubsubConsumerProps;
+public class PubSubPartitionLevelStreamConfig {
+  private static final Map<String, String> defaultProps;
+  private final Map<String, String> pubsubConsumerProps;
 
-	private final String projectId;
-	private final String subscriptionId;
+  private final String projectId;
+  private final String subscriptionId;
 
-	static {
-		defaultProps = new HashMap<>();
-	}
+  static {
+    defaultProps = new HashMap<>();
+  }
 
-	public PubSubStreamLevelStreamConfig(StreamConfig streamConfig, String tableName, String groupId) {
+  public PubSubPartitionLevelStreamConfig(StreamConfig streamConfig) {
 		Map<String, String> streamConfigMap = streamConfig.getStreamConfigsMap();
 
 		// Check mandatory configuration
