@@ -40,38 +40,38 @@ public class PubSubPartitionLevelConsumer implements PartitionLevelConsumer {
   private static final Logger LOGGER = LoggerFactory.getLogger(PubSubPartitionLevelConsumer.class);
   private final static Integer MAX_MESSAGES_PULLED_PER_BATCH = 20;
 
-	private PubSubPartitionLevelStreamConfig pubSubStreamLevelStreamConfig;
+  private PubSubPartitionLevelStreamConfig pubSubStreamLevelStreamConfig;
 
-	private PullRequest pubsubPullRequest;
-	private SubscriberStub pubsubSubscriber;
-	private final String pubsubSubscriptionName;
+  private PullRequest pubsubPullRequest;
+  private SubscriberStub pubsubSubscriber;
+  private final String pubsubSubscriptionName;
 
-	// Keeps information for logging
-	private long currentCount = 0L;
+  // Keeps information for logging
+  private long currentCount = 0L;
 
   public PubSubPartitionLevelConsumer(String clientId, StreamConfig streamConfig, int partition) {
     pubSubStreamLevelStreamConfig = new PubSubPartitionLevelStreamConfig(streamConfig);
 
-		// Build Pub/Sub subscription path based on user's config
-		pubsubSubscriptionName = ProjectSubscriptionName.format(
-			pubSubStreamLevelStreamConfig.getProjectId(),
-			pubSubStreamLevelStreamConfig.getSubscriptionId()
-		);
+    // Build Pub/Sub subscription path based on user's config
+    pubsubSubscriptionName = ProjectSubscriptionName.format(
+      pubSubStreamLevelStreamConfig.getProjectId(),
+      pubSubStreamLevelStreamConfig.getSubscriptionId()
+    );
 
     LOGGER.info("Pub/Sub connecting (clientId {}, partition {})", clientId, partition);
     try {
       SubscriberStubSettings subscriberStubSettings = SubscriberStubSettings.newBuilder()
-			.setTransportChannelProvider(
-				SubscriberStubSettings
-					.defaultGrpcTransportProviderBuilder()
-					.setMaxInboundMessageSize(20 * 1024 * 1024) // 20MB (maximum message size).
-					.build()
-			).build();
+      .setTransportChannelProvider(
+        SubscriberStubSettings
+          .defaultGrpcTransportProviderBuilder()
+          .setMaxInboundMessageSize(20 * 1024 * 1024) // 20MB (maximum message size).
+          .build()
+      ).build();
 
-		// Try to connect to Pub/Sub
+    // Try to connect to Pub/Sub
     pubsubSubscriber = GrpcSubscriberStub.create(subscriberStubSettings);
     pubsubPullRequest = PullRequest.newBuilder()
-				.setMaxMessages(MAX_MESSAGES_PULLED_PER_BATCH)
+        .setMaxMessages(MAX_MESSAGES_PULLED_PER_BATCH)
         .setSubscription(pubsubSubscriptionName)
         .build();
     LOGGER.info("Pubsub connected (clientId {}, partition {})", clientId, partition);
