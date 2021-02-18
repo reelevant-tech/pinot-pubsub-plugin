@@ -1,3 +1,8 @@
+# Deprecation
+
+We initally wrote this plugin to ingest data from GCP's Pubsub into Pinot, however we find out that it was impossible to do it reliably.
+You can find a post mortem here: https://github.com/apache/incubator-pinot/issues/6556
+
 # Pinot Pub/Sub plugin
 
 Apache Pinot [stream ingestion plugin](https://docs.pinot.apache.org/developers/plugin-architecture/write-custom-plugins/write-your-stream) for Cloud Pub/Sub.
